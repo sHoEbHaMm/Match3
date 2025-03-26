@@ -34,6 +34,9 @@ public class MatchableGrid : GridSystem<Matchable>
                 // activate the matchable
                 newMatchable.gameObject.SetActive(true);
 
+                //tell this matchable where it is on the grid
+                newMatchable.gridPosition = new Vector2Int(x, y);
+
                 // place it in the grid data structure
                 PutItemAt(newMatchable, x, y);
 
