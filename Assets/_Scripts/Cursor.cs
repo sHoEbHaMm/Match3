@@ -5,6 +5,8 @@ public class Cursor : Singleton<Cursor>
 {
     private SpriteRenderer spriteRenderer;
 
+    private MatchableGrid grid;
+
     private Matchable[] selectedMatchables;
 
     //  These variables will be used to stretch and reposition the cursor to cover 2 matchables
@@ -17,6 +19,11 @@ public class Cursor : Singleton<Cursor>
                 halfDown = Vector3.down / 2,
                 halfLeft = Vector3.left / 2,
                 halfRight = Vector3.right / 2;
+
+    private void Start()
+    {
+        grid = (MatchableGrid)MatchableGrid.Instance;
+    }
 
     protected override void Initialize()
     {
@@ -48,8 +55,8 @@ public class Cursor : Singleton<Cursor>
             selectedMatchables[0] == selectedMatchables[1])
             return;
 
-        if(SelectedAreAdjacent())
-            print("Swapping");
+        if (SelectedAreAdjacent())
+            StartCoroutine(grid.TrySwap(selectedMatchables));
 
         SelectFirst(null);
     }

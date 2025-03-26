@@ -12,7 +12,11 @@ public class Matchable : Movable
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer = GetComponent<SpriteRenderer>();   
+    }
+
+    private void Start()
+    {
         cursor = Cursor.Instance;
     }
 
