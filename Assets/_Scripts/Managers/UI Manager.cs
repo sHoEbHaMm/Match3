@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class UIManager : Singleton<UIManager>
@@ -24,6 +25,6 @@ public class UIManager : Singleton<UIManager>
 
     private void UpdateScoreText(int updateTo)
     {
-        scoreText.text = updateTo.ToString();
+        scoreText.text = "Score: " + updateTo.ToString();
     }
 }

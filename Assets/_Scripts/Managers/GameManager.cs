@@ -14,7 +14,8 @@ public class GameManager : Singleton<GameManager>
 
     [SerializeField] private Vector2Int gridDimensions = Vector2Int.one;
 
-    public event Action<int, int> OnGridInitialized;
+    public event Action<int, int> OnGridInitialized; // Camera handler is a subscriber to this event
+                                                    
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -29,6 +30,7 @@ public class GameManager : Singleton<GameManager>
     private IEnumerator Setup()
     {
         // Put a loading screen here
+        
 
         // Pool the matchables
         pool.PoolObjects(gridDimensions.x * gridDimensions.y * 2);
@@ -40,7 +42,10 @@ public class GameManager : Singleton<GameManager>
 
         StartCoroutine(grid.PopulateGrid(false, true));
 
-        // remove loading screen
+        // setup camera
         OnGridInitialized?.Invoke(gridDimensions.x, gridDimensions.y);
+
+        // remove loading screen
+        
     }
 }
