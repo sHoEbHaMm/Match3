@@ -16,6 +16,7 @@ public class MatchableGrid : GridSystem<Matchable>
     public event Action<Match> OnResolveRequested;
 
     private MatchablePool pool;
+    private AudioMixer audioMixer;
 
     [Tooltip("Matchables start falling down from this offset on screen")]
     [SerializeField] private Vector3 offScreenOffset;
@@ -23,6 +24,7 @@ public class MatchableGrid : GridSystem<Matchable>
     private void Start()
     {
         pool = (MatchablePool)MatchablePool.Instance;
+        audioMixer = AudioMixer.Instance;
     }
     public IEnumerator PopulateGrid(bool allowMatches = false, bool initialPopulation = false)
     {
@@ -74,6 +76,9 @@ public class MatchableGrid : GridSystem<Matchable>
         {
             // position it on the screen
             onScreenPosition = transform.position + new Vector3(newMatchables[i].gridPosition.x, newMatchables[i].gridPosition.y);
+
+            // play a landing sound after a delay when the matchable lands in postion
+            audioMixer.PlayDelayedSound(SoundEffects.land, 1f / newMatchables[i].Speed);
 
             if (i == newMatchables.Count - 1)
                 yield return StartCoroutine(newMatchables[i].MoveToPosition(onScreenPosition));
@@ -223,6 +228,9 @@ public class MatchableGrid : GridSystem<Matchable>
 
         // start animation to move it on screen
         StartCoroutine(toMove.MoveToPosition(transform.position + new Vector3(x, y)));
+
+        // play a landing sound after a delay when the matchable lands in postion
+        audioMixer.PlayDelayedSound(SoundEffects.land, 1f / toMove.Speed);
     }
 
     private Match GetMatch(Matchable toMatch)
@@ -360,6 +368,9 @@ public class MatchableGrid : GridSystem<Matchable>
         Vector3[] worldPosition = new Vector3[2];
         worldPosition[0] = toBeSwapped[0].transform.position;
         worldPosition[1] = toBeSwapped[1].transform.position;
+
+        //play swap sound without delay
+        audioMixer.PlaySound(SoundEffects.swap);
 
         //  move them to their new positions on screen
         StartCoroutine(toBeSwapped[0].MoveToPosition(worldPosition[1]));

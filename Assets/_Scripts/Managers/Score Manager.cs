@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class ScoreManager : Singleton<ScoreManager>
 {
+    private AudioMixer audioMixer;
+    private MatchableGrid matchableGrid;
+    private UIManager uIManager;
+
     private int score;
     private int comboMultiplier = 0;
 
@@ -20,8 +24,6 @@ public class ScoreManager : Singleton<ScoreManager>
     [SerializeField] private float currentComboTime;
     private bool isComboTimerActive;
 
-    private MatchableGrid matchableGrid;
-    private UIManager uIManager;
 
     public event Action<int> OnScoreUpdated;
     public event Action<bool> ToggleComboUI;
@@ -33,6 +35,8 @@ public class ScoreManager : Singleton<ScoreManager>
     {
         matchableGrid = (MatchableGrid)MatchableGrid.Instance;
         uIManager = UIManager.Instance;
+        audioMixer = AudioMixer.Instance;
+
         matchableGrid.OnResolveRequested += ResolveMatch;
 
         ToggleComboUI?.Invoke(false);
@@ -52,6 +56,9 @@ public class ScoreManager : Singleton<ScoreManager>
     public IEnumerator StartResolvingMatch(Match toResolve)
     {
         Matchable matchable;
+
+        //play resolve sound
+        audioMixer.PlaySound(SoundEffects.resolve);
 
         for(int i = 0; i != toResolve.Count; i++)
         {
@@ -85,6 +92,9 @@ public class ScoreManager : Singleton<ScoreManager>
 
         if (!isComboTimerActive)
             StartCoroutine(ComboTimer());
+
+        // play score sound
+        audioMixer.PlaySound(SoundEffects.score);
     }
 
     // This corountine counts up to max combo time before resetting the combo multiplier
