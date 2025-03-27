@@ -25,6 +25,6 @@ public class UIManager : Singleton<UIManager>
 
     private void UpdateScoreText(int updateTo)
     {
-        scoreText.text = "Score: " + updateTo.ToString();
+        scoreText.text = updateTo.ToString();
     }
 }
