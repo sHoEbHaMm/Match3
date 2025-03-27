@@ -231,18 +231,32 @@ public class MatchableGrid : GridSystem<Matchable>
         Match horizontalMatch, verticalMatch;
 
         // First get horizontal matches to left and right
-        horizontalMatch = GetMatchesInDirection(toMatch, Vector2Int.left);
-        horizontalMatch.Merge(GetMatchesInDirection(toMatch, Vector2Int.right));
+        horizontalMatch = GetMatchesInDirection(newMatch,toMatch, Vector2Int.left);
+        horizontalMatch.Merge(GetMatchesInDirection(newMatch,toMatch, Vector2Int.right));
+
+        horizontalMatch.orientation = Orientation.horizontal;
 
         if (horizontalMatch.Count > 1)
+        {
             newMatch.Merge(horizontalMatch);
 
+            //scan for vertical branches
+            GetBranches(newMatch, horizontalMatch, Orientation.vertical);
+        }
+
         // Then get vertical matches to up and down
-        verticalMatch = GetMatchesInDirection(toMatch, Vector2Int.up);
-        verticalMatch.Merge(GetMatchesInDirection(toMatch, Vector2Int.down));
+        verticalMatch = GetMatchesInDirection(newMatch,toMatch, Vector2Int.up);
+        verticalMatch.Merge(GetMatchesInDirection(newMatch,toMatch, Vector2Int.down));
+
+        verticalMatch.orientation = Orientation.vertical;
 
         if (verticalMatch.Count > 1)
+        {
             newMatch.Merge(verticalMatch);
+
+            // scan for horizontal branches
+            GetBranches(newMatch, verticalMatch, Orientation.horizontal);
+        }
 
         if (newMatch.Count == 1)
             return null;
@@ -251,7 +265,7 @@ public class MatchableGrid : GridSystem<Matchable>
     }
 
     // Add each matching matchable in the direction to a match and return it
-    private Match GetMatchesInDirection(Matchable toMatch, Vector2Int direction)
+    private Match GetMatchesInDirection(Match tree, Matchable toMatch, Vector2Int direction)
     {
         Match match = new Match();
         Vector2Int position = toMatch.gridPosition + direction;
@@ -263,13 +277,36 @@ public class MatchableGrid : GridSystem<Matchable>
 
             if (next.GetMatchableType() == toMatch.GetMatchableType() && next.Idle)
             {
-                match.AddMatchable(GetItemAt(position));
+                if (!tree.Contains(next))
+                    match.AddMatchable(next);
+                else
+                    match.AddUnlisted();
+
                 position += direction;
             }
             else
                 break;
         }
         return match;
+    }
+
+    private void GetBranches(Match tree, Match branchToSearch, Orientation perpendicular)
+    {
+        Match branch;
+
+        foreach(Matchable matchable in branchToSearch.Matchables)
+        {
+            branch = GetMatchesInDirection(tree, matchable, perpendicular == Orientation.horizontal ? Vector2Int.left : Vector2Int.down);
+            branch.Merge(GetMatchesInDirection(tree, matchable, perpendicular == Orientation.horizontal ? Vector2Int.right : Vector2Int.up));
+
+            branch.orientation = perpendicular;
+             
+            if(branch.Count > 1)
+            {
+                tree.Merge(branch);
+                GetBranches(tree, branch, perpendicular == Orientation.horizontal ? Orientation.vertical : Orientation.horizontal);
+            }
+        }
     }
 
     // scan the grid for any matches and resolve them
