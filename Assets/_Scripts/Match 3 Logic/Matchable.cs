@@ -1,8 +1,11 @@
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
 public class Matchable : Movable
 {
+    private MatchablePool pool; 
+
     private MatchableType matchableType;
     private SpriteRenderer spriteRenderer;
     private Cursor cursor;
@@ -12,7 +15,8 @@ public class Matchable : Movable
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();   
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        pool = (MatchablePool)MatchablePool.Instance;
     }
 
     private void Start()
@@ -44,5 +48,22 @@ public class Matchable : Movable
     public MatchableType GetMatchableType()
     {
         return matchableType;
+    }
+
+    public IEnumerator MoveThemOff(Transform toThisTransform)
+    {
+        // draw above others in the grid
+        spriteRenderer.sortingOrder = 2;
+
+        //move off the grid to the point
+        yield return StartCoroutine(MoveToPosition(toThisTransform.position));
+
+        // reset
+        spriteRenderer.sortingOrder = 2;
+
+        // return it back to the pool
+        pool.ReturnObjectToPool(this);
+
+        yield return null;
     }
 }

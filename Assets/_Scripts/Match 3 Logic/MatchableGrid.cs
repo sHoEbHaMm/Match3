@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.ComponentModel;
 using Unity.Burst.CompilerServices;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -10,6 +12,8 @@ using UnityEngine.SocialPlatforms.Impl;
  */
 public class MatchableGrid : GridSystem<Matchable>
 {
+    public event Action<Match> OnResolveRequested;
+
     private MatchablePool pool;
 
     [SerializeField] private Vector3 offScreenOffset;
@@ -64,10 +68,46 @@ public class MatchableGrid : GridSystem<Matchable>
         }
     }
 
-    //TODO
-    private bool isPartOfAMatch(Matchable matchable)
+    // This funtion checks if the matchable being populated is part of a match or not
+    private bool isPartOfAMatch(Matchable toMatch)
     {
+        int horizontalMatches = 0, verticalMatches = 0;
+
+        // First check left side
+        horizontalMatches += CountMatchesInDirection(toMatch, Vector2Int.left);
+
+        // Now check right side
+        horizontalMatches += CountMatchesInDirection(toMatch, Vector2Int.right);
+
+        if (horizontalMatches > 1)
+            return true;
+
+        // Check upward direction
+        verticalMatches += CountMatchesInDirection(toMatch, Vector2Int.up);
+
+        // Check downward direction
+        verticalMatches += CountMatchesInDirection(toMatch, Vector2Int.down);
+
+        if (verticalMatches > 1)
+            return true;
+
         return false;
+    }
+
+    // This function counts the number of matches on the grid starting from the matchable toMatch moving in the direction indicated
+    private int CountMatchesInDirection(Matchable toMatch, Vector2Int direction)
+    {
+        int matches = 0;
+
+        Vector2Int position = toMatch.gridPosition + direction;
+
+        while (BoundsCheck(position) && !IsEmpty(position) && GetItemAt(position).GetMatchableType() == toMatch.GetMatchableType())
+        {
+            matches++;
+            position += direction;
+        }
+
+        return matches;
     }
 
     // attempt to swap 2 matchables on the grid, see if they made a valid match, resolve any matches, if no matches, swap them back
@@ -81,33 +121,83 @@ public class MatchableGrid : GridSystem<Matchable>
         //  yield until matchables animate swapping
         yield return StartCoroutine(Swap(copies));
 
-        /*        //  check for a valid match
-                Match[] matches = new Match[2];
+        //  check for a valid match
+        Match[] matches = new Match[2];
 
-                matches[0] = GetMatch(copies[0]);
-                matches[1] = GetMatch(copies[1]);
+        matches[0] = GetMatch(copies[0]);
+        matches[1] = GetMatch(copies[1]);
 
-                //   if we made valid matches, resolve them
-                if (matches[0] != null)
-                    StartCoroutine(score.ResolveMatch(matches[0]));
+        //   if we made valid matches, resolve them
+        if (matches[0] != null)
+            OnResolveRequested?.Invoke(matches[0]);
+        //StartCoroutine(score.ResolveMatch(matches[0]));
 
-                if (matches[1] != null)
-                    StartCoroutine(score.ResolveMatch(matches[1]));
+        if (matches[1] != null)
+            OnResolveRequested?.Invoke(matches[1]);
+        //StartCoroutine(score.ResolveMatch(matches[1]));
 
-                //  if there's no match, swap them back
-                if (matches[0] == null && matches[1] == null)
-                {
-                    yield return StartCoroutine(Swap(copies));
+        //  if there's no match, swap them back
+        if (matches[0] == null && matches[1] == null)
+        {
+            yield return StartCoroutine(Swap(copies));
 
-                    // if swapping them back creates a match, find it and resolve, fill the grid and scan again
-                    if (ScanForMatches())
-                        StartCoroutine(FillAndScanGrid());
-                }
-                //  if there was a match, fill and scan the grid
-                else
-                    StartCoroutine(FillAndScanGrid());*/
+/*            // if swapping them back creates a match, find it and resolve, fill the grid and scan again
+            if (ScanForMatches())
+                StartCoroutine(FillAndScanGrid());*/
+        }
+        //  if there was a match, fill and scan the grid
+/*        else
+            StartCoroutine(FillAndScanGrid());*/
 
-        StartCoroutine(Swap(copies));
+        //StartCoroutine(Swap(copies));
+    }
+
+    private Match GetMatch(Matchable toMatch)
+    {
+        Match newMatch = new Match(toMatch);
+
+        Match horizontalMatch, verticalMatch;
+
+        // First get horizontal matches to left and right
+        horizontalMatch = GetMatchesInDirection(toMatch, Vector2Int.left);
+        horizontalMatch.Merge(GetMatchesInDirection(toMatch, Vector2Int.right));
+
+        if (horizontalMatch.Count > 1)
+            newMatch.Merge(horizontalMatch);
+
+        // Then get vertical matches to up and down
+        verticalMatch = GetMatchesInDirection(toMatch, Vector2Int.up);
+        verticalMatch.Merge(GetMatchesInDirection(toMatch, Vector2Int.down));
+
+        if (verticalMatch.Count > 1)
+            newMatch.Merge(verticalMatch);
+
+        if (newMatch.Count == 1)
+            return null;
+
+        return newMatch;
+    }
+
+    // Add each matching matchable in the direction to a match and return it
+    private Match GetMatchesInDirection(Matchable toMatch, Vector2Int direction)
+    {
+        Match match = new Match();
+        Vector2Int position = toMatch.gridPosition + direction;
+        Matchable next;
+
+        while (BoundsCheck(position) && !IsEmpty(position))
+        {
+            next = GetItemAt(position);
+
+            if (next.GetMatchableType() == toMatch.GetMatchableType() && next.Idle)
+            {
+                match.AddMatchable(GetItemAt(position));
+                position += direction;
+            }
+            else
+                break;
+        }
+        return match;
     }
 
     // coroutine that swaps 2 matchables in the grid
