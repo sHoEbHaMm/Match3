@@ -101,7 +101,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2beff84513f61f74bbced81b1bb756ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 1
+  speed: 2.5
   gridPosition: {x: 0, y: 0}
 --- !u!58 &3947891381968347358
 CircleCollider2D:
