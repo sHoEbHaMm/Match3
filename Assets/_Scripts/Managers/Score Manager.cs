@@ -5,6 +5,7 @@ using UnityEngine;
 public class ScoreManager : Singleton<ScoreManager>
 {
     private int score;
+    private int comboMultiplier = 0;
 
     public int Score
     {
@@ -14,10 +15,18 @@ public class ScoreManager : Singleton<ScoreManager>
         }
     }
 
+    private float timeSincePlayerLastScored;
+    [SerializeField] private float maxComboTime;
+    [SerializeField] private float currentComboTime;
+    private bool isComboTimerActive;
+
     private MatchableGrid matchableGrid;
     private UIManager uIManager;
 
     public event Action<int> OnScoreUpdated;
+    public event Action<bool> ToggleComboUI;
+    public event Action<float> OnComboChangeSlider;
+    public event Action<int> OnComboChangeText;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -25,6 +34,8 @@ public class ScoreManager : Singleton<ScoreManager>
         matchableGrid = (MatchableGrid)MatchableGrid.Instance;
         uIManager = UIManager.Instance;
         matchableGrid.OnResolveRequested += ResolveMatch;
+
+        ToggleComboUI?.Invoke(false);
     }
 
     // Update is called once per frame
@@ -64,7 +75,42 @@ public class ScoreManager : Singleton<ScoreManager>
 
     private void AddScore(int toAdd)
     {
-        score += toAdd;
+        score += toAdd * IncreaseComboMultiplier();
+
         OnScoreUpdated?.Invoke(score);
+        ToggleComboUI?.Invoke(true);
+        OnComboChangeText?.Invoke(comboMultiplier);
+
+        timeSincePlayerLastScored = 0;
+
+        if (!isComboTimerActive)
+            StartCoroutine(ComboTimer());
+    }
+
+    // This corountine counts up to max combo time before resetting the combo multiplier
+    private IEnumerator ComboTimer()
+    {
+        isComboTimerActive = true;
+
+        do
+        {
+            timeSincePlayerLastScored += Time.deltaTime;
+            //update fill bar
+            OnComboChangeSlider?.Invoke(1 - timeSincePlayerLastScored / currentComboTime);
+            yield return null;
+        }
+        while (timeSincePlayerLastScored < currentComboTime);
+
+        comboMultiplier = 0;
+        isComboTimerActive = false;
+
+        ToggleComboUI?.Invoke(false);
+    }
+
+    private int IncreaseComboMultiplier()
+    {
+        ++comboMultiplier;
+        currentComboTime = maxComboTime - Mathf.Log(comboMultiplier) / 2;
+        return comboMultiplier;
     }
 }
