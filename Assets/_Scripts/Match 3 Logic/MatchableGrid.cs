@@ -17,6 +17,7 @@ public class MatchableGrid : GridSystem<Matchable>
 
     private MatchablePool pool;
 
+    [Tooltip("Matchables start falling down from this offset on screen")]
     [SerializeField] private Vector3 offScreenOffset;
 
     private void Start()
