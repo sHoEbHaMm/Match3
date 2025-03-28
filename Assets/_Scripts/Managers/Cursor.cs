@@ -1,5 +1,12 @@
 using UnityEngine;
 
+
+/*
+ * This class will both draw the cursor where it needs to be and handle input processing
+ * This class is a Singleton so any other script can get a reference to this through Instance
+ * It requires a sprite renderer, designed to be used with a 9-slice of 1 unity unit in size
+ */
+
 [RequireComponent(typeof(SpriteRenderer))]
 public class Cursor : Singleton<Cursor>
 {
@@ -15,6 +22,7 @@ public class Cursor : Singleton<Cursor>
     private Matchable[] selectedMatchables;
 
     //  These variables will be used to stretch and reposition the cursor to cover 2 matchables
+    [Tooltip("These variables will be used to stretch and reposition the cursor to cover 2 matchables")]
     [SerializeField]
     private Vector2 verticalStretch = new Vector2Int(1, 2),
                     horizontalStretch = new Vector2Int(2, 1);
@@ -25,6 +33,17 @@ public class Cursor : Singleton<Cursor>
                 halfLeft = Vector3.left / 2,
                 halfRight = Vector3.right / 2;
 
+    //  since this is a singleton, using Init instead of Awake to initialize stuff
+    protected override void Initialize()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+
+        spriteRenderer.enabled = false;
+
+        selectedMatchables = new Matchable[2];
+    }
+
+    // get references to required gameobjects
     private void Start()
     {
         grid = (MatchableGrid)MatchableGrid.Instance;
@@ -60,15 +79,7 @@ public class Cursor : Singleton<Cursor>
             pool.ChangeType(selectedMatchables[0], pool.MatchableTypes[6]);
     }
 
-    protected override void Initialize()
-    {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-
-        spriteRenderer.enabled = false;
-
-        selectedMatchables = new Matchable[2];
-    }
-
+    //  select the 1st of 2 matchables, move the cursor to it, reset the size, and activate the sprite
     public void SelectFirst(Matchable toSelect)
     {
         selectedMatchables[0] = toSelect;
@@ -82,6 +93,7 @@ public class Cursor : Singleton<Cursor>
         spriteRenderer.enabled = true;
     }
 
+    //  select the 2nd of 2 matchables, if they are adjacent, swap them, then deselect
     public void SelectSecond(Matchable toSelect)
     {
         selectedMatchables[1] = toSelect;

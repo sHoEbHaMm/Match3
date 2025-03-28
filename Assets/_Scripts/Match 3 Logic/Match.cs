@@ -10,15 +10,21 @@ public enum Orientation
     both
 }
 
+/*
+ * This is a collection of Matchables that have been matched
+ */
 public class Match
 {
+    // the number of matchables that are considered part of this match but aren't added to the list
     private int unlisted = 0;
 
     // is this match horizontal or vertical?
     public Orientation orientation = Orientation.none;
 
+    // the internal list of matched matchables
     private List<Matchable> matchables;
 
+    // getters for the list and the list count
     public List<Matchable> Matchables
     {
         get
@@ -27,6 +33,7 @@ public class Match
         }
     }
 
+    //  getter for number of matchables part of this match
     public int Count
     {
         get
@@ -35,26 +42,31 @@ public class Match
         }
     }
 
+    // constructor, initializes the lis
     public Match()
     {
         matchables = new List<Matchable>(5);
     }
 
+    // overload, also adds a matchable
     public Match(Matchable original) : this()
     {
         AddMatchable(original);
     }
 
+    // add a matchable to the list
     public void AddMatchable(Matchable toAdd)
     {
         matchables.Add(toAdd);
     }
 
+    // add a matchable to the count without adding it to the list
     public void AddUnlisted()
     {
         unlisted++;
     }
 
+    // merge another match into this one
     public void Merge(Match toMerge)
     {
         matchables.AddRange(toMerge.matchables);
@@ -71,6 +83,7 @@ public class Match
         return s;
     }
 
+    //  check if a matchable is already in this match
     public bool Contains(Matchable toCompare)
     {
         return matchables.Contains(toCompare);

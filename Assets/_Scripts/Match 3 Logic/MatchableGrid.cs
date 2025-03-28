@@ -15,26 +15,35 @@ using UnityEngine.SocialPlatforms.Impl;
  */
 public class MatchableGrid : GridSystem<Matchable>
 {
+    //Score manager listens to this event when a resolve is requested
     public event Action<Match> OnResolveRequested;
 
+    //  The pool of Matchables with which to populate the grid
     private MatchablePool pool;
     private AudioMixer audioMixer;
 
-    [Tooltip("Matchables start falling down from this offset on screen")]
+    [Tooltip("A distance offscreen where the matchables will be spawned")]
+    //  A distance offscreen where the matchables will be spawned
     [SerializeField] private Vector3 offScreenOffset;
 
     // a list of all possible moves
     private List<Matchable> possibleMoves;
 
+    // get references to required gameobjects at start
     private void Start()
     {
         pool = (MatchablePool)MatchablePool.Instance;
         audioMixer = AudioMixer.Instance;
     }
+
+    //  Populate the grid with matchables from the pool
+    //  Optionally allow or not allow matches to be made while populating
     public IEnumerator PopulateGrid(bool allowMatches = false, bool initialPopulation = false)
     {
         Matchable newMatchable;
         Vector3 onScreenPosition;
+
+        // list of new matchables added during population
         List<Matchable> newMatchables = new List<Matchable>();
 
         for(int y = 0; y!=Dimensions.y; y++)
@@ -85,10 +94,10 @@ public class MatchableGrid : GridSystem<Matchable>
             // play a landing sound after a delay when the matchable lands in postion
             audioMixer.PlayDelayedSound(SoundEffects.land, 1f / newMatchables[i].Speed);
 
+            // move the matchable to its on screen position
             if (i == newMatchables.Count - 1)
                 yield return StartCoroutine(newMatchables[i].MoveToPosition(onScreenPosition));
             else
-                // move the matchable to its on screen psotion
                 StartCoroutine(newMatchables[i].MoveToPosition(onScreenPosition));
 
             // pause for 1/10 of a second for a coool effect
@@ -174,6 +183,7 @@ public class MatchableGrid : GridSystem<Matchable>
         }
         else
         {
+            //  if there was a match, fill and scan the grid
             StartCoroutine(FillAndScanGrid());
         }
     }
@@ -252,6 +262,7 @@ public class MatchableGrid : GridSystem<Matchable>
         audioMixer.PlayDelayedSound(SoundEffects.land, 1f / toMove.Speed);
     }
 
+    // Get a match containing this matchable, or null if it isn't part of any match
     private Match GetMatch(Matchable toMatch)
     {
         Match newMatch = new Match(toMatch);
@@ -305,9 +316,11 @@ public class MatchableGrid : GridSystem<Matchable>
 
             if (next.GetMatchableType() == toMatch.GetMatchableType() && next.Idle)
             {
+                //  only add matchables that aren't already part of the main match tr
                 if (!tree.Contains(next))
                     match.AddMatchable(next);
                 else
+                    //  otherwise this branch still needs to be considered valid, so increment the count without adding the matchable to the list
                     match.AddUnlisted();
 
                 position += direction;
@@ -318,6 +331,7 @@ public class MatchableGrid : GridSystem<Matchable>
         return match;
     }
 
+    //  After a horizontal or vertical match is found, scan it for branches in the perpendicular orientation
     private void GetBranches(Match tree, Match branchToSearch, Orientation perpendicular)
     {
         Match branch;
@@ -328,8 +342,9 @@ public class MatchableGrid : GridSystem<Matchable>
             branch.Merge(GetMatchesInDirection(tree, matchable, perpendicular == Orientation.horizontal ? Vector2Int.right : Vector2Int.up));
 
             branch.orientation = perpendicular;
-             
-            if(branch.Count > 1)
+
+            //  If a valid branch is found, merge it into the tree and scan it for more branches
+            if (branch.Count > 1)
             {
                 tree.Merge(branch);
                 GetBranches(tree, branch, perpendicular == Orientation.horizontal ? Orientation.vertical : Orientation.horizontal);

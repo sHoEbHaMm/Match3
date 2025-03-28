@@ -5,6 +5,12 @@ using TMPro;
 using System.Collections;
 using UnityEngine.SceneManagement;
 
+/*
+ * This class will handle all the in-game UI
+ * 
+ * This class inherits from Singleton so any other script can access it easily through UIManager.Instance
+ */
+
 public class UIManager : Singleton<UIManager>
 {
     private ScoreManager scoreManager;
