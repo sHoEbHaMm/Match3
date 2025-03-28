@@ -2461,7 +2461,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5d20f062800d7f45aad1e9bbd306834, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridDimensions: {x: 6, y: 6}
+  gridDimensions: {x: 7, y: 7}
   WaitBeforeMatchingEverything: 10
   WaitBeforeGameoverScreen: 3
 --- !u!4 &1184704479

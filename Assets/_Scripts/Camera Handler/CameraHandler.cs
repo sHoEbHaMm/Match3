@@ -1,6 +1,10 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
+
+/*
+ * This script automatically adjusts the camera postion with respect to the size of the grid, making sure the view is not disrupted
+ */
 public class CameraHandler : MonoBehaviour
 {
     private GameManager gameManager;
