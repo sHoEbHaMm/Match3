@@ -3,9 +3,14 @@ using UnityEngine;
 [RequireComponent(typeof(SpriteRenderer))]
 public class Cursor : Singleton<Cursor>
 {
+    [Tooltip("Enables you to press the number keys while holding mouse to change types\r\n ")]
+    //  activate the ability to edit the grid
+    public bool cheatMode;
+
     private SpriteRenderer spriteRenderer;
 
     private MatchableGrid grid;
+    private MatchablePool pool;
 
     private Matchable[] selectedMatchables;
 
@@ -23,6 +28,36 @@ public class Cursor : Singleton<Cursor>
     private void Start()
     {
         grid = (MatchableGrid)MatchableGrid.Instance;
+        pool = (MatchablePool)MatchablePool.Instance;
+    }
+
+    private void Update()
+    {
+        if (!cheatMode || selectedMatchables[0] == null)
+            return;
+
+        //  press the number keys while holding mouse to change types
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            pool.ChangeType(selectedMatchables[0], pool.MatchableTypes[0]);
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+            pool.ChangeType(selectedMatchables[0], pool.MatchableTypes[1]);
+
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+            pool.ChangeType(selectedMatchables[0], pool.MatchableTypes[2]);
+
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+            pool.ChangeType(selectedMatchables[0], pool.MatchableTypes[3]);
+
+        if (Input.GetKeyDown(KeyCode.Alpha5))
+            pool.ChangeType(selectedMatchables[0], pool.MatchableTypes[4]);
+
+        if (Input.GetKeyDown(KeyCode.Alpha6))
+            pool.ChangeType(selectedMatchables[0], pool.MatchableTypes[5]);
+
+        if (Input.GetKeyDown(KeyCode.Alpha7))
+            pool.ChangeType(selectedMatchables[0], pool.MatchableTypes[6]);
     }
 
     protected override void Initialize()

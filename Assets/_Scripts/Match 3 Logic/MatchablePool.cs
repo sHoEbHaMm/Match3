@@ -4,6 +4,14 @@ public class MatchablePool : ObjectPool<Matchable>
 {
     [SerializeField] private MatchableType[] matchableTypes;
 
+    public MatchableType[] MatchableTypes
+    {
+        get
+        {
+            return matchableTypes;
+        }
+    }
+
     public void ChooseARandomType(Matchable matchableToRandomize)
     {
         int random = UnityEngine.Random.Range(0, matchableTypes.Length);
@@ -35,5 +43,11 @@ public class MatchablePool : ObjectPool<Matchable>
 
         return nextType;
 
+    }
+
+    //  Manually set the type of a matchable, used for testing obscure cases
+    public void ChangeType(Matchable toChange, MatchableType type)
+    {
+        toChange.SetType(type);
     }
 }

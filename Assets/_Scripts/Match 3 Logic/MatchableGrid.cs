@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using Unity.Android.Gradle;
 using Unity.Burst.CompilerServices;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -20,6 +22,9 @@ public class MatchableGrid : GridSystem<Matchable>
 
     [Tooltip("Matchables start falling down from this offset on screen")]
     [SerializeField] private Vector3 offScreenOffset;
+
+    // a list of all possible moves
+    private List<Matchable> possibleMoves;
 
     private void Start()
     {
@@ -184,6 +189,20 @@ public class MatchableGrid : GridSystem<Matchable>
         {
             // collapse, repopulate and scan grid again
             StartCoroutine(FillAndScanGrid());
+        }
+        else
+        {
+            //if this there are no possible moves, game over
+            CheckPossibleMoves();
+        }
+    }
+
+    public void CheckPossibleMoves()
+    {
+        if (ScanForMoves() == 0)
+        {
+            // no moves!
+            GameManager.Instance.NoMoreMoves();
         }
     }
 
@@ -353,6 +372,23 @@ public class MatchableGrid : GridSystem<Matchable>
         return madeAMatch;
     }
 
+
+    //  match everything on the grid and resolve it
+    public void MatchEverything()
+    {
+        Match everything = new Match();
+
+        for (int y = 0; y != Dimensions.y; ++y)
+            for (int x = 0; x != Dimensions.x; ++x)
+                if (BoundsCheck(x, y) && !IsEmpty(x, y) && GetItemAt(x, y).Idle)
+                    everything.AddMatchable(GetItemAt(x, y));
+
+        OnResolveRequested?.Invoke(everything);
+        StartCoroutine(FillAndScanGrid());
+
+        audioMixer.PlaySound(SoundEffects.score);
+    }
+
     // coroutine that swaps 2 matchables in the grid
     private IEnumerator Swap(Matchable[] toBeSwapped)
     {
@@ -375,5 +411,87 @@ public class MatchableGrid : GridSystem<Matchable>
         //  move them to their new positions on screen
         StartCoroutine(toBeSwapped[0].MoveToPosition(worldPosition[1]));
         yield return StartCoroutine(toBeSwapped[1].MoveToPosition(worldPosition[0]));
+    }
+
+    //  scan for all possible moves
+    private int ScanForMoves()
+    {
+        possibleMoves = new List<Matchable>();
+
+        //  scan through the entire grid
+        //  if a matchable can move, add it to the list of possible moves
+        for (int y = 0; y != Dimensions.y; ++y)
+            for (int x = 0; x != Dimensions.x; ++x)
+                if (BoundsCheck(x, y) && !IsEmpty(x, y) && CanMove(GetItemAt(x, y)))
+                    possibleMoves.Add(GetItemAt(x, y));
+
+        return possibleMoves.Count;
+    }
+
+    //  check if this matchable can move to form a valid match
+    private bool CanMove(Matchable toCheck)
+    {
+        //  Can this matchable move in any of the 4 directions?
+        if
+        (
+                CanMove(toCheck, Vector2Int.up)
+            || CanMove(toCheck, Vector2Int.right)
+            || CanMove(toCheck, Vector2Int.down)
+            || CanMove(toCheck, Vector2Int.left)
+        )
+            return true;
+
+        return false;
+    }
+
+    //  Can this matchable move in 1 direction?
+    private bool CanMove(Matchable toCheck, Vector2Int direction)
+    {
+        //  Look 2 and 3 positions away straight ahead
+        Vector2Int position1 = toCheck.gridPosition + direction * 2,
+                    position2 = toCheck.gridPosition + direction * 3;
+
+        if (IsAPotentialMatch(toCheck, position1, position2))
+            return true;
+
+        //  What is the clockwise direction?
+        Vector2Int cw = new Vector2Int(direction.y, -direction.x),
+                    ccw = new Vector2Int(-direction.y, direction.x);
+
+        //  Look diagonally clockwise
+        position1 = toCheck.gridPosition + direction + cw;
+        position2 = toCheck.gridPosition + direction + cw * 2;
+
+        if (IsAPotentialMatch(toCheck, position1, position2))
+            return true;
+
+        //  Look diagonally both ways
+        position2 = toCheck.gridPosition + direction + ccw;
+
+        if (IsAPotentialMatch(toCheck, position1, position2))
+            return true;
+
+        //  Look diagonally counterclockwise
+        position1 = toCheck.gridPosition + direction + ccw * 2;
+
+        if (IsAPotentialMatch(toCheck, position1, position2))
+            return true;
+
+        return false;
+    }
+
+    //  Will these matchables form a potential match?
+    private bool IsAPotentialMatch(Matchable toCompare, Vector2Int position1, Vector2Int position2)
+    {
+        if
+        (
+            BoundsCheck(position1) && BoundsCheck(position2)
+            && !IsEmpty(position1) && !IsEmpty(position2)
+            && GetItemAt(position1).Idle && GetItemAt(position2).Idle
+            && GetItemAt(position1).GetMatchableType() == toCompare.GetMatchableType() && GetItemAt(position2).GetMatchableType() == toCompare.GetMatchableType()
+        )
+            return true;
+
+        return false;
     }
 }

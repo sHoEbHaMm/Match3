@@ -10,6 +10,15 @@ public class ScoreManager : Singleton<ScoreManager>
 
     private int score;
     private int comboMultiplier = 0;
+    private int highestComboMultiplier = 0;
+
+    public int HighestCombo
+    {
+        get
+        {
+            return highestComboMultiplier;
+        }
+    }
 
     public int Score
     {
@@ -28,7 +37,7 @@ public class ScoreManager : Singleton<ScoreManager>
     public event Action<int> OnScoreUpdated;
     public event Action<bool> ToggleComboUI;
     public event Action<float> OnComboChangeSlider;
-    public event Action<int> OnComboChangeText;
+    public event Action<int, int> OnComboChangeText;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -86,7 +95,7 @@ public class ScoreManager : Singleton<ScoreManager>
 
         OnScoreUpdated?.Invoke(score);
         ToggleComboUI?.Invoke(true);
-        OnComboChangeText?.Invoke(comboMultiplier);
+        OnComboChangeText?.Invoke(comboMultiplier, highestComboMultiplier);
 
         timeSincePlayerLastScored = 0;
 
@@ -120,6 +129,10 @@ public class ScoreManager : Singleton<ScoreManager>
     private int IncreaseComboMultiplier()
     {
         ++comboMultiplier;
+
+        if (highestComboMultiplier < comboMultiplier)
+            highestComboMultiplier = comboMultiplier;
+
         currentComboTime = maxComboTime - Mathf.Log(comboMultiplier) / 2;
         return comboMultiplier;
     }
