@@ -1,9 +1,6 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections;
-using UnityEngine.SceneManagement;
 
 /*
  * This class will handle all the in-game UI

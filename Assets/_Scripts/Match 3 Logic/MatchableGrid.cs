@@ -1,13 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using Unity.Android.Gradle;
-using Unity.Burst.CompilerServices;
 using UnityEngine;
-using UnityEngine.Audio;
-using UnityEngine.SocialPlatforms.Impl;
 
 /*
  * This class will manage the grid of matchables by inheriting grid mechanics from Grid System
