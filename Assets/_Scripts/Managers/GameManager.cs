@@ -112,6 +112,11 @@ public class GameManager : Singleton<GameManager>
 
     public void RestartGame()
     {
+        Invoke("LoadMainMenu", 5f);
+    }
+
+    private void LoadMainMenu()
+    {
         SceneManager.LoadScene(0);
     }
 }
